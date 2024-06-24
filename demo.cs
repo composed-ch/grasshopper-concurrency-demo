@@ -37,27 +37,57 @@ List<uint> PrimesUpTo(uint n)
     return primes;
 }
 
+List<uint> Factorize(uint n)
+{
+    var factors = new List<uint>();
+    var primes = PrimesUpTo(n / 2);
+    for (var i = 0; n > 1 && i < primes.Count;)
+    {
+        var factor = primes[i];
+        if (n % factor == 0)
+        {
+            factors.Add(factor);
+            n /= factor;
+        }
+        else
+        {
+            i++;
+        }
+    }
+    if (factors.Count == 0)
+    {
+        return new List<uint>() { n };
+    }
+    return factors;
+}
+
 class Result
 {
-    public List<uint> Primes { get; set; }
+    public uint Number { get; set; }
+    public List<uint> Factors { get; set; }
 }
 
 uint loops = (uint)Math.Floor((double)nThreads);
 uint max = (uint)Math.Floor((double)maxNumber);
+var rand = new Random();
+
+var before = DateTime.Now;
 
 var tasks = new List<Task<Result>>();
 for (uint i = 0; i < loops; i++)
 {
+    var n = (uint)(rand.NextInt64() % max);
     var task = Task<Result>.Factory.StartNew(() =>
-        new Result { Primes = PrimesUpTo(max) }
+        new Result { Number = n, Factors = Factorize(n) }
     );
     tasks.Add(task);
 }
 
 foreach (var task in tasks)
 {
-    var primeStr = string.Join(", ", task.Result.Primes);
-    Console.WriteLine($"primes: {primeStr}");
+    var primeStr = string.Join(", ", task.Result.Factors);
+    Console.WriteLine($"factors of {task.Result.Number}: [{primeStr}]");
 }
-//var foobar = string.Join(',', PrimesUpTo(max));
-//Console.WriteLine($"primes: {foobar}");
+
+var after = DateTime.Now;
+time = $"{after - before}";
